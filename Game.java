@@ -5,6 +5,8 @@ import java.io.IOException;
 public class Game {
     private static final Integer COLUMNS = 7;
     private static final Integer ROWS = 6;
+	static char player = 'R';
+	static char opponent = 'O';
     BufferedWriter writer;
     BufferedReader reader;
     BufferedReader client_reader;
@@ -17,12 +19,21 @@ public class Game {
         this.version = version;
     }
 
+	public static void main(String[] args) {
+		char[][] grid = new char[ROWS][COLUMNS];
+
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[0].length; col++){
+                grid[row][col] = ' ';
+            }
+        }
+
+		display(grid);
+	}
+
     public int startGame(boolean hosting) {
 
         PackageSender packageSender = new PackageSender();
-
-        char player = 'R';
-        char opponent = 'O';
 
         char[][] grid = new char[ROWS][COLUMNS];
 
@@ -107,23 +118,29 @@ public class Game {
 		}
         return 1;
 
-    }
-
-    private static void display(char[][] grid){
-		System.out.println(" 0 1 2 3 4 5 6");
-		System.out.println("---------------");
-		for (int row = 0; row < grid.length; row++){
-			System.out.print("|");
-			for (int col = 0; col < grid[0].length; col++){
-				System.out.print(grid[row][col]);
-				System.out.print("|");
-			}
+    }	
+		
+	private static void display(char[][] field) {
+        System.out.println("\033[1;36m    ╰•★★ 𝓒𝓸𝓷𝓷𝓮𝓬𝓽 𝓕𝓸𝓾𝓻 ★★•╯    \033[0m");
+        System.out.println("\033[1;36m ╭───┬───┬───┬───┬───┬───┬───╮ \033[0m");
+        for (int i = 0; i < field.length; i++) {
+            System.out.print("\033[1;36m │");
+            for (int j = 0; j < field[0].length; j++) {
+                if(field[i][j] == player) {
+                    System.out.print(" \033[0;94mO \033[1;36m│");
+                } else if(field[i][j] == opponent) {
+                    System.out.print(" \033[0;91mX \033[1;36m│");
+                } else {
+                    System.out.print("   │");
+                }
+            }
 			System.out.println();
-			System.out.println("---------------");
-		}
-		System.out.println(" 0 1 2 3 4 5 6");
-		System.out.println();
-	}
+            if(i!=5)
+                System.out.println("\033[1;36m ├───┼───┼───┼───┼───┼───┼───┤ \033[0m");
+        }
+        System.out.println("\033[1;36m ╰───┴───┴───┴───┴───┴───┴───╯ \033[0m");
+        System.out.println("\033[1;96m   1   2   3   4   5   6   7 \033[0m");
+    }
 
     public static boolean validate(int column, char[][] grid){
 		//valid column?
