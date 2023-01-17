@@ -2,7 +2,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 public class PackageSender {
-    public void sendPackage(BufferedWriter writer, String aktion, String inhalt) {
+
+    BufferedWriter writer;
+
+    public PackageSender(BufferedWriter writer) {
+        this.writer = writer;
+    }
+    public void sendPackage(String aktion, String inhalt) {
         try {
             writer.write(aktion + "|" + inhalt + "\n");
             writer.flush();
@@ -11,21 +17,21 @@ public class PackageSender {
         }
     }
 
-    public void handShakeInit(BufferedWriter writer, String versionList) {
+    public void handShakeInit(String versionList) {
         System.out.println("Initializing handshake");
-        sendPackage(writer, "0", versionList);
+        sendPackage("0", versionList);
     }
 
-    public void handShakeAccept(BufferedWriter writer, String version) {
+    public void handShakeAccept(String version) {
         System.out.println("Accepting handshake");
-        sendPackage(writer, "1", version);
+        sendPackage("1", version);
     }
 
-    public void error(BufferedWriter writer, String code) {
-        sendPackage(writer, "2", code);
+    public void error(String code) {
+        sendPackage("2", code);
     }
 
-    public void move(BufferedWriter writer, Integer column) {
-        sendPackage(writer, "3", column.toString());
+    public void move(Integer column) {
+        sendPackage("3", column.toString());
     }
 }

@@ -12,7 +12,8 @@ public class FWTP {
     private static final Integer PORT = 4444;
     private static final String VERSIONS = "1";
     private static final String HIGHEST_VERSION = "1";
-    static PackageSender packageSender = new PackageSender();
+    static PackageSender packageSender;
+    static ErrorHandler errorHandler = new ErrorHandler();
 
     public static void main(String[] args) {
         BufferedReader cli_reader = new BufferedReader(new InputStreamReader(System.in));
@@ -24,31 +25,30 @@ public class FWTP {
 
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    packageSender = new PackageSender(writer);
 
                     Boolean handShakeAcc = false;
                     String available_versions = null;
                     
                     while (!handShakeAcc) {
-                        String current_package = reader.readLine();
-                        if (current_package.startsWith("2")) {
-                            // TODO: include ErrorDecoder here
+                        Package current_package = new Package(reader.readLine());
+                        if (current_package.code == "2") {
+                            errorHandler.handle(current_package.content);
                             break;
                         }
-                        if (current_package.startsWith("0")) {
+                        if (current_package.code == "0") {
                             handShakeAcc = true;
-                            available_versions = current_package.substring(2);
+                            available_versions = current_package.content;
                         }
                     }
 
                     if (available_versions.contains(HIGHEST_VERSION)) {
-                        packageSender.handShakeAccept(writer, HIGHEST_VERSION);
-                        Game game = new Game(writer, reader, cli_reader, HIGHEST_VERSION);
-                        int status = game.startGame(false);
+                        packageSender.handShakeAccept(HIGHEST_VERSION);
+                        Game game = new Game(reader, cli_reader, HIGHEST_VERSION, errorHandler, packageSender);
+                        game.startGame(false);
                     } else {
-                        packageSender.error(writer, "1|No matching version found!");
+                        packageSender.error("1");
                     }
-                    
-                    
                 }
                 else if (current_line.startsWith("host")) {
                     Socket socket = host();
@@ -56,25 +56,25 @@ public class FWTP {
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                    packageSender.handShakeInit(writer, VERSIONS);
+                    packageSender.handShakeInit(VERSIONS);
 
                     Boolean handShakeAcc = false;
                     String version = null;
                     
                     while (!handShakeAcc) {
-                        String current_package = reader.readLine();
-                        if (current_package.startsWith("2")) {
-                            // TODO: include ErrorHandler here
+                        Package current_package = new Package(reader.readLine());
+                        if (current_package.code.equals("2")) {
+                            errorHandler.handle(current_package.content);
                             break;
                         }
-                        if (current_package.startsWith("1")) {
+                        if (current_package.code.equals("1")) {
                             handShakeAcc = true;
-                            version = current_package.substring(2);
+                            version = current_package.content;
                         }
                     }
                     if (handShakeAcc) {
-                        Game game = new Game(writer, reader, cli_reader, version);
-                        int status = game.startGame(true);
+                        Game game = new Game(reader, cli_reader, version, errorHandler, packageSender);
+                        game.startGame(true);
                     }
                 }
                 current_line = cli_reader.readLine();

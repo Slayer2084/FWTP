@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 public class Game {
@@ -7,16 +6,19 @@ public class Game {
     private static final Integer ROWS = 6;
 	static char player = 'R';
 	static char opponent = 'O';
-    BufferedWriter writer;
     BufferedReader reader;
     BufferedReader client_reader;
     String version;
+    ErrorHandler errorHandler;
+    PackageSender packageSender;
 
-    public Game(BufferedWriter writer, BufferedReader reader, BufferedReader client_reader, String version) {
-        this.writer = writer;
+    public Game(BufferedReader reader, BufferedReader client_reader, 
+                String version, ErrorHandler errorHandler, PackageSender packageSender) {
         this.reader = reader;
         this.client_reader = client_reader;
         this.version = version;
+        this.errorHandler = errorHandler;
+        this.packageSender = packageSender;
     }
 
 	public static void main(String[] args) {
@@ -32,8 +34,6 @@ public class Game {
 	}
 
     public int startGame(boolean hosting) {
-
-        PackageSender packageSender = new PackageSender();
 
         char[][] grid = new char[ROWS][COLUMNS];
 
@@ -58,15 +58,22 @@ public class Game {
             Integer column = null;
             do {
                 display(grid);
-                
+                String input;
                 try {
                     if (myTurn) {
                         System.out.println("Choose your column!");
-                        column = Integer.parseInt(client_reader.readLine());
+                        input = client_reader.readLine();
                     } else {
                         System.out.println("Waiting for opponent to choose column!");
-                        column = Integer.parseInt(reader.readLine().substring(2));
+                        input = reader.readLine();
                     }
+                    Package currentPackage = new Package(input);
+                    if (currentPackage.code.equals("1")) {
+                        column = Integer.parseInt(currentPackage.content);
+                    } else if (currentPackage.code.equals("2")) {
+                        errorHandler.handle(currentPackage.content);
+                    }
+                    
                 } catch (NumberFormatException e) {
                     break;
                 } catch (IOException e) {
@@ -77,14 +84,14 @@ public class Game {
 
                 if (!myTurn) {
                     if (!validPlay) {
-                        packageSender.error(writer, "2|Can't select column " + column + "! Please try again.");
+                        packageSender.error("2");
                     }
                 }
 
             } while (!validPlay);
             
             if (myTurn) {
-                packageSender.move(writer, column);
+                packageSender.move(column);
             }
 
             for (int row = grid.length-1; row >= 0; row--) {
@@ -144,7 +151,7 @@ public class Game {
 
     public static boolean validate(int column, char[][] grid){
 		//valid column?
-		if (column < 0 || column > grid[0].length){
+		if (column < 0 || column >= grid[0].length){
 			return false;
 		}
 		
