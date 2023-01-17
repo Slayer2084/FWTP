@@ -56,6 +56,8 @@ public class FWTP {
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
+                    packageSender = new PackageSender(writer);
+
                     packageSender.handShakeInit(VERSIONS);
 
                     Boolean handShakeAcc = false;
